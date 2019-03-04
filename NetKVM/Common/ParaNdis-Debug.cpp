@@ -112,9 +112,9 @@ static void NetKVMDebugPrint(const char *fmt, ...)
 {
     va_list list;
     va_start(list, fmt);
+#if !defined(NETKVM_WPP_ENABLED)
     PrintProcedure(DPFLTR_DEFAULT_ID, 9 | DPFLTR_MASK, fmt, list);
-#if defined(VIRTIO_DBG_USE_IOPORT)
-    {
+#else
         NTSTATUS status;
         // use this way of output only for DISPATCH_LEVEL,
         // higher requires more protection
@@ -128,14 +128,21 @@ static void NetKVMDebugPrint(const char *fmt, ...)
             else if (status == STATUS_BUFFER_OVERFLOW) len = sizeof(buf);
             else { memcpy(buf, "Can't print", 11); len = 11; }
             NdisAcquireSpinLock(&CrashLock);
+#if defined(VIRTIO_DBG_USE_IOPORT)
             for (i = 0; i < len; ++i)
             {
                 NdisRawWritePortUchar(VIRTIO_DBG_USE_IOPORT, buf[i]);
             }
             NdisRawWritePortUchar(VIRTIO_DBG_USE_IOPORT, '\n');
+#else
+            UNREFERENCED_PARAMETER(i);
+            if (status == STATUS_SUCCESS)
+            {
+                DPrintfVirtio(0, "%s", buf);
+            }
+#endif
             NdisReleaseSpinLock(&CrashLock);
         }
-    }
 #endif
     va_end(list);
 }
