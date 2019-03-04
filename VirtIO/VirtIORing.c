@@ -322,6 +322,7 @@ struct virtqueue *vring_new_virtqueue(
     for (i = 0; i < num - 1; i++) {
         vq->vring.desc[i].flags = VIRTQ_DESC_F_NEXT;
         vq->vring.desc[i].next = i + 1;
+        DPrintf(0, "initialized desc %p (%d/%d)\n", &vq->vring.desc[i], i, num);
     }
     return vq;
 }
