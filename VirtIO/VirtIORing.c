@@ -66,6 +66,30 @@ static inline void put_unused_desc_chain(struct virtqueue *vq, u16 idx)
     vq->first_unused = start;
 }
 
+#if defined(_ARM64_)
+static void SetAddress(ULONGLONG *src, __virtio64 *dest, LPCSTR caller)
+{
+    ULONG_PTR src_addr, dest_addr;
+    src_addr = (ULONG_PTR)(PVOID)src;
+    dest_addr = (ULONG_PTR)(PVOID)dest;
+    if ((src_addr & 7) || (dest_addr & 7))
+    {
+        LARGE_INTEGER *src_li, *dest_li;
+        DPrintf(0, "VirtioRing: unaligned %p->%p (%s)\n", src, dest, caller);
+        src_li = (LARGE_INTEGER *)src;
+        dest_li = (LARGE_INTEGER *)dest;
+        dest_li->LowPart = src_li->LowPart;
+        dest_li->HighPart = src_li->HighPart;
+    }
+    else
+    {
+        *dest = *src;
+    }
+}
+#else
+#define SetAddress(src, dest, caller) *dest = *src
+#endif
+
 /* Adds a buffer to a virtqueue, returns 0 on success, negative number on error */
 int virtqueue_add_buf(
     struct virtqueue *vq,    /* the queue */
@@ -87,7 +111,7 @@ int virtqueue_add_buf(
         for (i = 0; i < out + in; i++) {
             desc[i].flags = (i < out ? 0 : VIRTQ_DESC_F_WRITE);
             desc[i].flags |= VIRTQ_DESC_F_NEXT;
-            desc[i].addr = sg[i].physAddr.QuadPart;
+            SetAddress(&sg[i].physAddr.QuadPart, &desc[i].addr, "indirect 1");
             desc[i].len = sg[i].length;
             desc[i].next = (u16)i + 1;
         }
@@ -95,7 +119,7 @@ int virtqueue_add_buf(
 
         idx = get_unused_desc(vq);
         vq->vring.desc[idx].flags = VIRTQ_DESC_F_INDIRECT;
-        vq->vring.desc[idx].addr = phys_indirect;
+        SetAddress(&phys_indirect, &vq->vring.desc[idx].addr, "indirect 2");
         vq->vring.desc[idx].len = i * sizeof(struct vring_desc);
 
         vq->opaque[idx] = opaque;
@@ -111,7 +135,7 @@ int virtqueue_add_buf(
         idx = last_idx = get_unused_desc(vq);
         vq->opaque[idx] = opaque;
 
-        vring->desc[idx].addr = sg[0].physAddr.QuadPart;
+        SetAddress(&sg[0].physAddr.QuadPart, &vring->desc[idx].addr, "regular 1");
         vring->desc[idx].len = sg[0].length;
         vring->desc[idx].flags = VIRTQ_DESC_F_NEXT;
         if (out == 0) {
@@ -123,7 +147,7 @@ int virtqueue_add_buf(
         for (i = 1; i < out + in; i++) {
             last_idx = get_unused_desc(vq);
 
-            vring->desc[last_idx].addr = sg[i].physAddr.QuadPart;
+            SetAddress(&sg[i].physAddr.QuadPart, &vring->desc[last_idx].addr, "regular 2");
             vring->desc[last_idx].len = sg[i].length;
             vring->desc[last_idx].flags = VIRTQ_DESC_F_NEXT;
             if (i >= out) {
