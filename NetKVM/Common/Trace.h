@@ -49,6 +49,9 @@
 // USEPREFIX (DPrintf, "%!STDPREFIX! %!FUNC!");
 // FUNC DPrintf{Flags=TRACE_DRIVER}(LEVEL, MSG, ...);
 //
+// USEPREFIX (DPrintf, "%!STDPREFIX!");
+// FUNC DPrintfVirtio{Flags=TRACE_DRIVER}(LEVEL, MSG, ...);
+//
 // USEPREFIX (DEBUG_ENTRY, "%!STDPREFIX! %!FUNC!");
 // FUNC DEBUG_ENTRY{Flags=TRACE_DRIVER}(LEVEL, ...);
 //
