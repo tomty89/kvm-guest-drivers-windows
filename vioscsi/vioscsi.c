@@ -484,6 +484,14 @@ ENTER_FN();
         return SP_RETURN_NOT_FOUND;
     }
 
+    /*
+     * Do not do +1 (or any adjustment / remediation whatsoever) to any user input values
+     * (i.e. seg_max, registry), as they can be arbitrarily entered. It could only lead to
+     * confusions / surprises. Do not do that to the "clamp floor" (i.e. SCSI_MINIMUM_PHYSICAL_BREAKS)
+     * either as it only prevents users from using the real minimal when necessary. Defining a "clamp
+     * ceiling" / default (i.e. MAX_PHYS_SEGMENTS) is the best and only thing we could / should do.
+     */
+
     /* Set num_queues and seg_max to some sane values, to keep "Static Driver Verification" happy */
     adaptExt->scsi_config.num_queues = 1;
     /* Happy? (Begin) */
@@ -510,7 +518,6 @@ ENTER_FN();
         ConfigInfo->NumberOfPhysicalBreaks  = SCSI_MINIMUM_PHYSICAL_BREAKS;
     } else {
 #if (NTDDI_VERSION > NTDDI_WIN7)
-        /* If you do registry, +1 yourself; the clamping should be done after that anyway */
         if (adaptExt->indirect) {
             VioScsiReadRegistry(DeviceExtension);
         }
