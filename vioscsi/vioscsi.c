@@ -489,7 +489,8 @@ ENTER_FN();
      * (i.e. seg_max, registry), as they can be arbitrarily entered. It could only lead to
      * confusions / surprises. Do not do that to the "clamp floor" (i.e. SCSI_MINIMUM_PHYSICAL_BREAKS)
      * either as it only prevents users from using the real minimal when necessary. Defining a "clamp
-     * ceiling" / default (i.e. MAX_PHYS_SEGMENTS) is the best and only thing we could / should do.
+     * ceiling" / default (i.e. MAX_PHYS_SEGMENTS) with such "optimization" is the best and only thing
+     * we could / should do.
      */
 
     /* Set num_queues and seg_max to some sane values, to keep "Static Driver Verification" happy */
