@@ -485,7 +485,16 @@ ENTER_FN();
 
     /* Set num_queues and seg_max to some sane values, to keep "Static Driver Verification" happy */
     adaptExt->scsi_config.num_queues = 1;
-    adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS + 1;
+    /* Happy? (Begin) */
+    /* Getting virtqueue_size is prioritized over your happiness. I don't care. */
+    adaptExt->max_physical_breaks = min(
+                                        max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->scsi_config.seg_max),
+    /* It is unknown that whether clamping to MAX_PHYS_SEGMENTS (+1) is necessary. For now stick to the habit. */
+                                        // SCSI_MAXIMUM_PHYSICAL_BREAKS);
+                                        MAX_PHYS_SEGMENTS + 1);
+    /* It doesn't reflect the ultimate number of physical breaks anyway. So let's KISS and not + 1 */
+    adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS;
+    /* Happy? (End) */
     GetScsiConfig(DeviceExtension);
     SetGuestFeatures(DeviceExtension);
 
@@ -500,13 +509,15 @@ ENTER_FN();
     if(adaptExt->dump_mode) {
         ConfigInfo->NumberOfPhysicalBreaks  = SCSI_MINIMUM_PHYSICAL_BREAKS;
     } else {
-        adaptExt->max_physical_breaks = MAX_PHYS_SEGMENTS;
 #if (NTDDI_VERSION > NTDDI_WIN7)
+        /* If you do registry, +1 yourself; the clamping should be done after that anyway */
         if (adaptExt->indirect) {
             VioScsiReadRegistry(DeviceExtension);
         }
 #endif
-        ConfigInfo->NumberOfPhysicalBreaks = adaptExt->max_physical_breaks + 1;
+        /* If I misunderstood the criteria of your happiness: */
+        // adaptExt->scsi_config.seg_max =
+        ConfigInfo->NumberOfPhysicalBreaks = adaptExt->max_physical_breaks;
     }
     RhelDbgPrint(TRACE_LEVEL_INFORMATION, " NumberOfPhysicalBreaks %d\n", ConfigInfo->NumberOfPhysicalBreaks);
     ConfigInfo->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
