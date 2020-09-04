@@ -331,7 +331,8 @@ BOOLEAN VioScsiReadRegistry(
            sizeof(ULONG));
     adaptExt->max_physical_breaks = min(
                                         max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->max_physical_breaks),
-                                        SCSI_MAXIMUM_PHYSICAL_BREAKS);
+                                        /* We don't want to blow off VIO_SG and VRING_DESC_ALIAS */
+                                        MAX_PHYS_SEGMENTS);
 
     StorPortFreeRegistryBuffer(DeviceExtension, pBuf );
 
@@ -489,10 +490,9 @@ ENTER_FN();
     /* Getting virtqueue_size is prioritized over your happiness. I don't care. */
     adaptExt->max_physical_breaks = min(
                                         max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->scsi_config.seg_max),
-    /* It is unknown that whether clamping to MAX_PHYS_SEGMENTS (+1) is necessary. For now stick to the habit. */
-                                        // SCSI_MAXIMUM_PHYSICAL_BREAKS);
-                                        MAX_PHYS_SEGMENTS + 1);
-    /* It doesn't reflect the ultimate number of physical breaks anyway. So let's KISS and not + 1 */
+    /* We don't want to blow off VIO_SG and VRING_DESC_ALIAS */
+                                        MAX_PHYS_SEGMENTS);
+    /* If we can't set this dynamically, set it to the maximum we predefined: */
     adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS;
     /* Happy? (End) */
     GetScsiConfig(DeviceExtension);
