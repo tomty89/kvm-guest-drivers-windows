@@ -498,7 +498,7 @@ ENTER_FN();
     /* Getting virtqueue_size is prioritized over your happiness. I don't care. */
     adaptExt->max_physical_breaks = min(
                                         max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->scsi_config.seg_max),
-    /* We don't want to blow off VIO_SG and VRING_DESC_ALIAS */
+                                        /* We don't want to blow off VIO_SG and VRING_DESC_ALIAS */
                                         MAX_PHYS_SEGMENTS);
     /* If we can't set this dynamically, set it to the maximum we predefined: */
     adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS;
