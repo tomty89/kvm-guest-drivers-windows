@@ -493,19 +493,16 @@ ENTER_FN();
      * we could / should do.
      */
 
-    GetScsiConfig(DeviceExtension);
     /* Set num_queues and seg_max to some sane values, to keep "Static Driver Verification" happy */
-    /* Do we want to get num_queues? We are overriding now */
     adaptExt->scsi_config.num_queues = 1;
-    /* Happy? (Begin) */
-    /* Getting virtqueue_size is prioritized over your happiness. I don't care. */
+    adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS;
+    /* The above settings will be invalidated after this: */
+    GetScsiConfig(DeviceExtension);
     adaptExt->max_physical_breaks = min(
                                         max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->scsi_config.seg_max),
                                         /* We don't want to blow off VIO_SG and VRING_DESC_ALIAS */
                                         MAX_PHYS_SEGMENTS);
-    /* If we can't set this dynamically, set it to the maximum we predefined: */
-    adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS;
-    /* Happy? (End) */
+    /* Do we need to update adaptExt->scsi_config.seg_max? */
     SetGuestFeatures(DeviceExtension);
 
     if(!adaptExt->dump_mode) {
@@ -518,15 +515,15 @@ ENTER_FN();
 
     if(adaptExt->dump_mode) {
         ConfigInfo->NumberOfPhysicalBreaks  = SCSI_MINIMUM_PHYSICAL_BREAKS;
+        /* Do we need to update adaptExt->scsi_config.seg_max and adaptExt->max_physical_breaks? */
     } else {
 #if (NTDDI_VERSION > NTDDI_WIN7)
         if (adaptExt->indirect) {
             VioScsiReadRegistry(DeviceExtension);
         }
 #endif
-        /* If I misunderstood the criteria of your happiness: */
-        // adaptExt->scsi_config.seg_max =
         ConfigInfo->NumberOfPhysicalBreaks = adaptExt->max_physical_breaks;
+        /* Do we need to update adaptExt->scsi_config.seg_max? */
     }
     RhelDbgPrint(TRACE_LEVEL_INFORMATION, " NumberOfPhysicalBreaks %d\n", ConfigInfo->NumberOfPhysicalBreaks);
     ConfigInfo->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
