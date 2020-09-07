@@ -493,7 +493,9 @@ ENTER_FN();
      * we could / should do.
      */
 
+    GetScsiConfig(DeviceExtension);
     /* Set num_queues and seg_max to some sane values, to keep "Static Driver Verification" happy */
+    /* Do we want to get num_queues? We are overriding now */
     adaptExt->scsi_config.num_queues = 1;
     /* Happy? (Begin) */
     /* Getting virtqueue_size is prioritized over your happiness. I don't care. */
@@ -504,7 +506,6 @@ ENTER_FN();
     /* If we can't set this dynamically, set it to the maximum we predefined: */
     adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS;
     /* Happy? (End) */
-    GetScsiConfig(DeviceExtension);
     SetGuestFeatures(DeviceExtension);
 
     if(!adaptExt->dump_mode) {
