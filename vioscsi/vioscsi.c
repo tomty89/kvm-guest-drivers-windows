@@ -486,6 +486,7 @@ ENTER_FN();
     /* Set num_queues and seg_max to some sane values, to keep "Static Driver Verification" happy */
     adaptExt->scsi_config.num_queues = 1;
     adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS + 1;
+    /* The above values are now invalidated by: */
     GetScsiConfig(DeviceExtension);
     adaptExt->max_physical_breaks = min(
                                         max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->scsi_config.seg_max + 2),
