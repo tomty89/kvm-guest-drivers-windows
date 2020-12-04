@@ -487,6 +487,9 @@ ENTER_FN();
     adaptExt->scsi_config.num_queues = 1;
     adaptExt->scsi_config.seg_max = MAX_PHYS_SEGMENTS + 1;
     GetScsiConfig(DeviceExtension);
+    adaptExt->max_physical_breaks = min(
+                                        max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->scsi_config.seg_max + 2),
+                                        MAX_PHYS_SEGMENTS);
     SetGuestFeatures(DeviceExtension);
 
     if(!adaptExt->dump_mode) {
@@ -500,7 +503,6 @@ ENTER_FN();
     if(adaptExt->dump_mode) {
         ConfigInfo->NumberOfPhysicalBreaks  = SCSI_MINIMUM_PHYSICAL_BREAKS;
     } else {
-        adaptExt->max_physical_breaks = MAX_PHYS_SEGMENTS;
 #if (NTDDI_VERSION > NTDDI_WIN7)
         if (adaptExt->indirect) {
             VioScsiReadRegistry(DeviceExtension);
