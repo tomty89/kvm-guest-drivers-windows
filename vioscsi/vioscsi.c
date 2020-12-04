@@ -331,7 +331,7 @@ BOOLEAN VioScsiReadRegistry(
            sizeof(ULONG));
     adaptExt->max_physical_breaks = min(
                                         max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->max_physical_breaks),
-                                        SCSI_MAXIMUM_PHYSICAL_BREAKS);
+                                        MAX_PHYS_SEGMENTS);
 
     StorPortFreeRegistryBuffer(DeviceExtension, pBuf );
 
