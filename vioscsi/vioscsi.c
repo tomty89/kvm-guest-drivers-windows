@@ -45,6 +45,9 @@
 #include <hbaapi.h>
 #include <ntddscsi.h>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #define VioScsiWmi_MofResourceName        L"MofResource"
 
 #include "resources.h"
@@ -447,6 +450,8 @@ VioScsiFindAdapter(
     ULONG              num_cpus;
     ULONG              max_cpus;
     ULONG              max_queues;
+    ULONG              max_bytes;
+    DOUBLE             max_bytes_exp;
 
     UNREFERENCED_PARAMETER( HwContext );
     UNREFERENCED_PARAMETER( BusInformation );
@@ -500,7 +505,12 @@ ENTER_FN();
     if(adaptExt->dump_mode) {
         ConfigInfo->NumberOfPhysicalBreaks  = SCSI_MINIMUM_PHYSICAL_BREAKS;
     } else {
-        adaptExt->max_physical_breaks = MAX_PHYS_SEGMENTS;
+        max_bytes = max(PAGE_SIZE, (adaptExt->scsi_config.max_sectors << SECTOR_SHIFT) - PAGE_SIZE);
+        max_bytes_exp = floorf(log(max_bytes) * M_LOG2E);
+        adaptExt->max_physical_breaks = pow(2, max_bytes_exp) >> PAGE_SHIFT;
+        adaptExt->max_physical_breaks = min(
+                                            max(SCSI_MINIMUM_PHYSICAL_BREAKS, adaptExt->max_physical_breaks),
+                                            MAX_PHYS_SEGMENTS);
 #if (NTDDI_VERSION > NTDDI_WIN7)
         if (adaptExt->indirect) {
             VioScsiReadRegistry(DeviceExtension);
