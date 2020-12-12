@@ -447,6 +447,7 @@ VioScsiFindAdapter(
     ULONG              num_cpus;
     ULONG              max_cpus;
     ULONG              max_queues;
+    ULONG              max_bytes;
 
     UNREFERENCED_PARAMETER( HwContext );
     UNREFERENCED_PARAMETER( BusInformation );
@@ -500,7 +501,21 @@ ENTER_FN();
     if(adaptExt->dump_mode) {
         ConfigInfo->NumberOfPhysicalBreaks  = SCSI_MINIMUM_PHYSICAL_BREAKS;
     } else {
-        adaptExt->max_physical_breaks = MAX_PHYS_SEGMENTS;
+        max_bytes = (adaptExt->scsi_config.max_sectors << SECTOR_SHIFT) - PAGE_SIZE;
+
+        max_bytes = min(MAX_PHYS_SEGMENTS << PAGE_SHIFT, max(PAGE_SIZE, max_bytes));
+        int i = 6; // log(MAX_PHYS_SEGMENTS) * M_LOG2E
+        ULONG j = 0;
+        do {
+            j = max_bytes & (1 << (i + PAGE_SHIFT));
+            if (j != 0) {
+                max_bytes = j;
+                break;
+            }
+            i--;
+        } while (i >= 0);
+
+        adaptExt->max_physical_breaks = max(SCSI_MINIMUM_PHYSICAL_BREAKS, max_bytes >> PAGE_SHIFT);
 #if (NTDDI_VERSION > NTDDI_WIN7)
         if (adaptExt->indirect) {
             VioScsiReadRegistry(DeviceExtension);
